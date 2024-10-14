@@ -3,14 +3,12 @@ import "./admin-program.scss";
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
 import PrimaryButton from "../../../../shared/components/buttons/primero-button";
 import DataTable from "../../../../shared/components/table/data-table";
-import { faPlus, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Modal from "../../../../shared/components/modals/modal";
 import NameInputField from "../../../../shared/components/fields/unif";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
-const handleEdit = (id: number) => {
-  // Implement your edit logic here
-};
+
 
 const Program: React.FC = () => {
   const [programs, setPrograms] = useState([
@@ -109,7 +107,7 @@ const Program: React.FC = () => {
           <FontAwesomeIcon
             icon={faEdit}
             className="edit-icon"
-            onClick={() => handleEdit(row.id)}
+            
           />
         </div>
       ),
