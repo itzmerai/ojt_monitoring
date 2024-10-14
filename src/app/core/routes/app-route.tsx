@@ -15,11 +15,6 @@ import CoordinatorReport from "../../domain/coordinator/report/cd-report";
 import CoordinatorAnnouncement from "../../domain/coordinator/announcement/cd-announcement";
 
 export function AppRoute() {
-  const [activeItem, setActiveItem] = useState<string>("dashboard");
-
-  const handleItemClick = (item: string) => {
-    setActiveItem(item);
-  };
 
   const router = createBrowserRouter([
     {
