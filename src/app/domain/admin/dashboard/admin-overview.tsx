@@ -9,10 +9,8 @@ import {
 } from "react-icons/fa";
 import { ResponsiveContainer } from "recharts";
 import Card from "../../../../shared/components/cards/card";
-import DonutChartCard from "../../../../shared/components/charts/donut-chart";
 import ProgressRingCard from "../../../../shared/components/charts/ring-chart";
 import LineChartCard from "../../../../shared/components/charts/line-chart";
-import RecentCoordinators from "../../../../shared/components/cards/overview-coordinator/recentcoordinator";
 import NewCoordinatorCard from "../../../../shared/components/new-coordinator/new-coordinator";
 
 const Overview: React.FC = () => {
