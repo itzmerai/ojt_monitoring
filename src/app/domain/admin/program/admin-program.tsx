@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./admin-program.scss";
-import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
+import SearchBar from "../../../../shared/components/searchbar/searchbar";
 import PrimaryButton from "../../../../shared/components/buttons/primero-button";
 import DataTable from "../../../../shared/components/table/data-table";
 import { faPlus, faEdit } from "@fortawesome/free-solid-svg-icons";
@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Modal from "../../../../shared/components/modals/modal";
 import NameInputField from "../../../../shared/components/fields/unif";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
-
 
 const Program: React.FC = () => {
   const [programs, setPrograms] = useState([
@@ -35,11 +34,10 @@ const Program: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [program, setProgram] = useState("");
   const [description, setDescription] = useState("");
-  const [requiredDuration, setRequiredDuration] = useState(""); // New state for required duration
+  const [requiredDuration, setRequiredDuration] = useState("");
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
-  const [currentModal, setCurrentModal] = useState<string>("details"); // Track which modal step is active
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] =
-    useState<boolean>(false);
+  const [currentModal, setCurrentModal] = useState<string>("details");
+
   const handleAddButtonClick = () => {
     setShowModal(true);
   };
@@ -53,7 +51,6 @@ const Program: React.FC = () => {
     } else if (field === "description") {
       setDescription(e.target.value);
     } else if (field === "requiredDuration") {
-      // Handle required duration input
       setRequiredDuration(e.target.value);
     }
   };
@@ -62,18 +59,18 @@ const Program: React.FC = () => {
     setShowModal(false);
     setProgram("");
     setDescription("");
-    setRequiredDuration(""); // Reset required duration
+    setRequiredDuration("");
   };
 
   const handleModalSave = () => {
     if (!program || !description || !requiredDuration) {
       setIsErrorModalOpen(true);
     } else {
-      // Show the confirmation modal if all fields are filled
       setCurrentModal("confirmation");
-      setShowModal(false); // Close the add modal
+      setShowModal(false);
     }
   };
+
   const confirmAddProgram = () => {
     const newProgram = {
       id: programs.length + 1,
@@ -82,18 +79,12 @@ const Program: React.FC = () => {
       requiredDuration,
     };
 
-    // Add the new program to the state
     setPrograms([...programs, newProgram]);
 
-    // Close the confirmation modal
-    setCurrentModal("details"); // Reset to details or whatever your default modal is
-    setIsConfirmationModalOpen(false); // Close confirmation modal
-
-    // Reset fields
-    handleModalCancel(); // This will reset fields and close the add modal
+    setCurrentModal("details");
+    handleModalCancel();
   };
 
-  // Table columns
   const columns = [
     { header: "ID", key: "id" },
     { header: "Program", key: "program" },
@@ -102,13 +93,9 @@ const Program: React.FC = () => {
     {
       header: "Action",
       key: "action",
-      render: (row: any) => (
+      render: () => (
         <div className="action-icons">
-          <FontAwesomeIcon
-            icon={faEdit}
-            className="edit-icon"
-            
-          />
+          <FontAwesomeIcon icon={faEdit} className="edit-icon" />
         </div>
       ),
     },
@@ -119,7 +106,6 @@ const Program: React.FC = () => {
       <h1 className="page-title">Program</h1>
       <h2 className="page-subtitle">Manage Academic Program</h2>
 
-      {/* Add the SearchBar and Add Button side by side */}
       <div className="controls-container">
         <div className="search-bar-container">
           <SearchBar
@@ -137,10 +123,8 @@ const Program: React.FC = () => {
         </div>
       </div>
 
-      {/* Render the DataTable */}
       <DataTable columns={columns} data={programs} />
 
-      {/* Modal for adding a new program */}
       <Modal
         show={showModal}
         message="Please fill in the details below:"
@@ -176,7 +160,6 @@ const Program: React.FC = () => {
               onChange={(e) => handleInputChange(e, "description")}
             />
 
-            {/* New Required Duration Input Field */}
             <label htmlFor="requiredDuration">Duration</label>
             <NameInputField
               type="text"
@@ -209,9 +192,10 @@ const Program: React.FC = () => {
           </div>
         </div>
       </Modal>
+
       <Modal
         show={isErrorModalOpen}
-        title="" // Remove the title
+        title=""
         message="Please fill out all required fields."
         onCancel={() => setIsErrorModalOpen(false)}
         size="small"
