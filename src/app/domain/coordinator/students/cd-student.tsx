@@ -16,7 +16,7 @@ import Dropdown from "../../../../shared/components/dropdowns/dropdown";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 
 const CoordinatorStudent: React.FC = () => {
-  const [studentData, setStudentData] = useState([
+  const [studentData] = useState([
     {
       id: 1,
       studentId: "186744",
@@ -220,13 +220,7 @@ const CoordinatorStudent: React.FC = () => {
     },
   ];
 
-  const handleReturnToRegister = () => {
-    // Implement the logic for returning to register
-  };
 
-  const handleCredentialsSave = () => {
-    // Implement the logic for saving credentials
-  };
 
   return (
     <div className="dashboard-page">
