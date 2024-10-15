@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import "./user-coordinator.scss";
-import {
-  faEdit,
-  faEnvelope,
-  faIdCard,
-} from "@fortawesome/free-solid-svg-icons";
+import {faEnvelope} from "@fortawesome/free-solid-svg-icons";
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
-import Dropdown from "../../../../shared/components/dropdowns/dropdown"; // Adjust the path as needed
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PrimaryButton from "../../../../shared/components/buttons/primero-button";
@@ -20,7 +15,6 @@ import axios from "axios";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 
 const Coordinator: React.FC = () => {
-  const [status, setStatus] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false); // Modal visibility state
   const [currentModal, setCurrentModal] = useState<string>("details"); // Track which modal step is active
   const [firstName, setFirstName] = useState<string>("");
@@ -32,7 +26,7 @@ const Coordinator: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [setErrorMessage] = useState<string>("");
   const [coordinatorsPerPage] = useState<number>(5);
 
   const [currentPage, setCurrentPage] = useState<number>(0);
@@ -46,10 +40,6 @@ const Coordinator: React.FC = () => {
     resetForm(); // Reset the form when the modal is closed
   };
 
-  const handleStatusChange = (selectedStatus: string) => {
-    setStatus(selectedStatus);
-    console.log("Selected Status:", selectedStatus);
-  };
 
   const handleAddButtonClick = () => {
     openModal(); // Open the modal when "Add Coordinator" button is clicked
@@ -150,7 +140,6 @@ const Coordinator: React.FC = () => {
     console.log("The photoURL is :", photoUrl);
   };
 
-  const offset = currentPage * coordinatorsPerPage; // Changed to coordinatorsPerPage
 
   const resetForm = () => {
     setFirstName("");
@@ -192,14 +181,6 @@ const Coordinator: React.FC = () => {
       return;
     }
     try {
-      const newCoordinator = {
-        firstName,
-        lastName,
-        email,
-        username,
-        password,
-        imgDirectory: photoUrl,
-      }; // Closing the object here
 
       setShowModal(false);
       resetForm(); // Optionally reset the form after saving
