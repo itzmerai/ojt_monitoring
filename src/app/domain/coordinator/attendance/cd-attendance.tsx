@@ -2,11 +2,9 @@ import React, { useState } from "react";
 import "./cd-attendance.scss";
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
 import DataTable from "../../../../shared/components/table/data-table";
-import { faEdit } from "@fortawesome/free-solid-svg-icons"; // Import only the edit icon
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Attendance: React.FC = () => {
-  const [attendanceData, setAttendanceData] = useState([
+  const [attendanceData] = useState([
     {
       id: 1,
       date: "186744",
@@ -42,10 +40,6 @@ const Attendance: React.FC = () => {
       location: "Town Center, Town",
     },
   ]);
-
-  const handleEdit = (id: number) => {
-    console.log("Edit attendance record with ID:", id);
-  };
 
   // Table columns with Location next to Name
   const columns = [
