@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import "./user-student.scss";
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
 import DataTable from "../../../../shared/components/table/data-table";
