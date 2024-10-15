@@ -27,7 +27,6 @@ const NameInputField: React.FC<NameInputFieldProps> = ({
   onTogglePassword,
   label,
   rows = 3,
-  className = "",
 }) => {
   return (
     <div className="name-input-field">

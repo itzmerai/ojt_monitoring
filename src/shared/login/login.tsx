@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./login.scss";
 import PrimaryButton from "../components/buttons/primero-button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLock,
   faEye,
   faUser,
   faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router-dom";
 import InputField from "../components/fields/inputfield";
 
 // Import the logo image
@@ -24,10 +22,9 @@ const LoginForm: React.FC = () => {
     password?: string;
   }>({});
   const [showPassword, setShowPassword] = useState(false);
-  const [showValidationError, setShowValidationError] = useState(false);
-  const [validationErrorMessage, setValidationErrorMessage] = useState("");
+  const [, setShowValidationError] = useState(false);
+  const [, setValidationErrorMessage] = useState("");
 
-  const navigate = useNavigate();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -66,9 +63,6 @@ const LoginForm: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleModalClose = () => {
-    setShowValidationError(false);
-  };
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {

@@ -26,8 +26,6 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({
   show,
-  title,
-  message,
   onCancel,
   onConfirm,
   size = "small",
