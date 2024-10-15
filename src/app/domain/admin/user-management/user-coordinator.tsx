@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./user-coordinator.scss";
-import {faEnvelope} from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,10 +26,7 @@ const Coordinator: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
-  const [setErrorMessage] = useState<string>("");
-  const [coordinatorsPerPage] = useState<number>(5);
-
-  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string>(""); // Correctly define the state for error messages
 
   const openModal = () => {
     setShowModal(true); // Show modal
@@ -39,7 +36,6 @@ const Coordinator: React.FC = () => {
     setShowModal(false); // Close modal
     resetForm(); // Reset the form when the modal is closed
   };
-
 
   const handleAddButtonClick = () => {
     openModal(); // Open the modal when "Add Coordinator" button is clicked
@@ -80,6 +76,7 @@ const Coordinator: React.FC = () => {
       setCurrentModal("confirmation");
     }
   };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
     field: string
@@ -114,17 +111,15 @@ const Coordinator: React.FC = () => {
   };
 
   const handlePhotoUpload = async (file: File) => {
-    // Display a preview of the photo
     const photoURL = URL.createObjectURL(file);
     setPhotoUrl(photoURL);
 
-    // Upload the photo to the backend
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const response = await axios.post(
-        "http://localhost:3001/upload-photo", // Adjust this if needed
+        "http://localhost:3001/upload-photo",
         formData,
         {
           headers: {
@@ -132,14 +127,11 @@ const Coordinator: React.FC = () => {
           },
         }
       );
-      // Assuming the backend returns a path or URL for the uploaded photo
-      setPhotoUrl(response.data.filename); // Adjust this as per your backend response
+      setPhotoUrl(response.data.filename); // Update with actual backend response
     } catch (error) {
       console.error("Error uploading file:", error);
     }
-    console.log("The photoURL is :", photoUrl);
   };
-
 
   const resetForm = () => {
     setFirstName("");
@@ -168,7 +160,6 @@ const Coordinator: React.FC = () => {
     },
   ];
 
-  // Add this function to handle edit action
   const handleEdit = (id: number) => {
     console.log(`Edit coordinator with id: ${id}`);
     // Implement edit logic here
@@ -177,15 +168,13 @@ const Coordinator: React.FC = () => {
   const handleConfirmSave = async () => {
     if (!firstName || !lastName || !email || !username || !password) {
       setErrorMessage("Please complete all fields before confirming.");
-      setIsErrorModalOpen(true); // Prevent confirmation if validation fails
+      setIsErrorModalOpen(true);
       return;
     }
     try {
-
       setShowModal(false);
-      resetForm(); // Optionally reset the form after saving
+      resetForm();
       setCurrentModal("details");
-      // Continue processing newAdminCashier, such as making an API call or other logic
     } catch (error) {
       console.error("Error saving coordinator:", error);
     }
@@ -232,7 +221,7 @@ const Coordinator: React.FC = () => {
         <div className="search-bar-container">
           <SearchBar
             placeholder="Search"
-            onSearch={(query) => console.log("Search query:", query)} // Add your search handler here
+            onSearch={(query) => console.log("Search query:", query)}
           />
         </div>
 
@@ -268,14 +257,12 @@ const Coordinator: React.FC = () => {
           <div className="modal-body">
             <div className="modal-body-left">
               <label htmlFor="firstName">First Name</label>
-
               <NameInputField
                 type="text"
                 id="firstName"
                 value={firstName}
                 onChange={(e) => handleInputChange(e, "firstName")}
               />
-
               <label htmlFor="lastName">Last Name</label>
               <NameInputField
                 type="text"
@@ -294,13 +281,6 @@ const Coordinator: React.FC = () => {
                   className="contactnum"
                   onChange={(e) => handleInputChange(e, "contact")}
                 />
-                {/*<label htmlFor="email">Email</label>
-                 <NameInputField
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => handleInputChange(e, "email")}
-                />*/}
                 <PhotoUploadButton
                   onPhotoUpload={handlePhotoUpload}
                   imgDirectory={photoUrl}
@@ -404,10 +384,9 @@ const Coordinator: React.FC = () => {
       <Modal
         show={isErrorModalOpen}
         title="Error"
-        message="Please fill out all required fields."
+        message={errorMessage}
         onCancel={() => setIsErrorModalOpen(false)}
         size="small"
-        // confirmButtonText="OK"
         singleButton={true}
       >
         <div className="modal-custom-content">
