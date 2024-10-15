@@ -1,25 +1,10 @@
 import React, { useState } from "react";
 import "./user-student.scss";
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
-import Dropdown from "../../../../shared/components/dropdowns/dropdown"; // Adjust the path as needed
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import PrimaryButton from "../../../../shared/components/buttons/primero-button";
 import DataTable from "../../../../shared/components/table/data-table";
 
 const Student: React.FC = () => {
-  const [program, setProgram] = useState<string>("");
 
-  const handleProgramChange = (selectedProgram: string) => {
-    setProgram(selectedProgram);
-    console.log("Selected Program:", selectedProgram);
-  };
-
-  const handleAddButtonClick = () => {
-    console.log("Add Student button clicked");
-  };
-
-  // Updated columns for the DataTable
   const columns = [
     { header: "Student ID", key: "studentId" },
     { header: "Coordinator", key: "coordinator" },
