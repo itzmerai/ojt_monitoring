@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import "./cd-company.scss";
-
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
 import DataTable from "../../../../shared/components/table/data-table";
-import { faEdit, faPlus, faQrcode } from "@fortawesome/free-solid-svg-icons"; // Added faQrcode
+import { faEdit, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PrimaryButton from "../../../../shared/components/buttons/primero-button";
 import Modal from "../../../../shared/components/modals/modal";
@@ -20,9 +19,7 @@ const CoordinatorCompany: React.FC = () => {
       contactNo: string;
       qrCode: string | null;
     }>
-  >([
-    //example data in table here
-  ]);
+  >([]);
 
   const [showModal, setShowModal] = useState(false);
   const [currentModal, setCurrentModal] = useState<string | null>(null);
@@ -105,12 +102,8 @@ const CoordinatorCompany: React.FC = () => {
   };
 
   const handleModalSave = () => {
-    // Instead of closing the modal, transition to the next one
+    // Transition to the next modal
     setCurrentModal("credentials");
-  };
-
-  const handleReturnToRegister = () => {
-    // Implement the logic for returning to register
   };
 
   const handleGenerateQRCode = () => {
@@ -144,12 +137,6 @@ const CoordinatorCompany: React.FC = () => {
     setShowModal(false);
     setQRCodeData(null);
     setCurrentModal(null);
-  };
-
-  const companyPerPage = 10; // Adjust this number as needed
-  const pageCount = Math.ceil(companyPerPage);
-  const handlePageClick = ({ selected }: { selected: number }) => {
-    // Handle page change logic here using the 'selected' value
   };
 
   return (
@@ -242,7 +229,7 @@ const CoordinatorCompany: React.FC = () => {
         show={showModal && currentModal === "credentials"}
         title=""
         message=""
-        onCancel={() => setCurrentModal("details")} // Go back to the first modal
+        onCancel={() => setCurrentModal("details")}
         onConfirm={handleRegisterQRCode}
         size="medlarge"
         cancelButtonText="Back"
