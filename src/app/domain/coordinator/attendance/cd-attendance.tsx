@@ -129,7 +129,7 @@ const Attendance: React.FC = () => {
   return (
     <div className="dashboard-page">
       <h1 className="page-title">Attendance</h1>
-      <h2 className="page-subtitle">Check Student Attendance</h2>
+      <h2 className="page-subtitle">Check Student Attendances</h2>
 
       {/* SearchBar */}
       <div className="controls-container">
