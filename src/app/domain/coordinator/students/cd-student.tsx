@@ -1,13 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "./cd-student.scss";
 import SearchBar from "../../../../shared/components/searchbar/searchbar";
 import DataTable from "../../../../shared/components/table/data-table";
-import {
-  faEdit,
-  faPlus,
-  faEnvelope,
-  faIdCard,
-} from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faPlus, faEnvelope, faIdCard } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PrimaryButton from "../../../../shared/components/buttons/primero-button";
 import Modal from "../../../../shared/components/modals/modal";
@@ -15,65 +11,12 @@ import NameInputField from "../../../../shared/components/fields/unif";
 import Dropdown from "../../../../shared/components/dropdowns/dropdown";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 
-const CoordinatorStudent: React.FC = () => {
-  const [studentData] = useState([
-    {
-      id: 1,
-      studentId: "186744",
-      studentInfo: {
-        name: "Richel Hetutuane Cubelo",
-        address: "Bentig, Calape, Bohol",
-        contactNo: "123-456-7890",
-        sex: "Female",
-      },
-      status: "Active",
-      company: "Marvs Digital",
-      program: "BSCS",
-      schoolYear: "2023-2024",
-    },
-    {
-      id: 2,
-      studentId: "186745",
-      studentInfo: {
-        name: "Ryan Postanes Amasora",
-        address: "Desamparados, Calape, Bohol",
-        contactNo: "987-654-3210",
-        sex: "Bayot",
-      },
-      status: "Inactive",
-      company: "DataSoft Solutions",
-      program: "BSIT",
-      schoolYear: "2023-2024",
-    },
-    {
-      id: 3,
-      studentId: "186746",
-      studentInfo: {
-        name: "Rica Cubelo",
-        address: "Bentig, Calape, Bohol",
-        contactNo: "989-111-0000",
-        sex: "Female",
-      },
-      status: "Inactive",
-      company: "DataSoft Solutions",
-      program: "BSIT",
-      schoolYear: "2023-2024",
-    },
-    {
-      id: 4,
-      studentId: "186747",
-      studentInfo: {
-        name: "Ronie Cubelo",
-        address: "Bentig, Calape, Bohol",
-        contactNo: "129-111-1910",
-        sex: "Male",
-      },
-      status: "Inactive",
-      company: "Skyride",
-      program: "BSEd",
-      schoolYear: "2024-2025",
-    },
-  ]);
+const CoordinatorStudent = () => {
+  const [studentData, setStudentData] = useState([]);
+  const [programOptions, setProgramOptions] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
+  const [schoolYearOptions, setSchoolYearOptions] = useState([]);
+  const [coordinatorId, setCoordinatorId] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
@@ -81,24 +24,49 @@ const CoordinatorStudent: React.FC = () => {
   const [contact, setContact] = useState("");
   const [sex, setSex] = useState("");
   const [studentId, setStudentId] = useState("");
-  const [program, setProgram] = useState("BSCS");
-  const [schoolYear, setSchoolYear] = useState("2023-2024");
+  const [program, setProgram] = useState("");
+  const [schoolYear, setSchoolYear] = useState("");
   const [company, setCompany] = useState("");
-  const [status, setStatus] = useState("");
-  const [currentModal, setCurrentModal] = useState<string | null>(null);
+  const [status, setStatus] = useState("Active");
+  const [currentModal, setCurrentModal] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  const handleEdit = (id: number) => {
-    console.log("Edit student record with ID:", id);
-  };
+  useEffect(() => {
+    const storedCoordinatorId = localStorage.getItem("coordinator_id");
+    if (storedCoordinatorId) {
+      setCoordinatorId(storedCoordinatorId);
+    } else {
+      alert("Coordinator ID not found. Please log in again.");
+      window.location.href = "/login";
+    }
+  }, []);
 
-  const handleAddButtonClick = () => {
-    setShowModal(true);
-  };
+  // Fetch data for dropdowns and students
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!coordinatorId) return;
+
+      try {
+        const [studentsRes,  companiesRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/studentsni", { params: { coordinator_id: coordinatorId } }),
+          axios.get("http://localhost:5000/api/companynameni", { params: { coordinator_id: coordinatorId } }),
+        ]);
+
+        setStudentData(studentsRes.data);
+        setCompanyOptions(companiesRes.data.map((c) => ({ value: c.company_id, label: c.company_name })));
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [coordinatorId]);
+
+  const handleAddButtonClick = () => setShowModal(true);
 
   const handleModalCancel = () => {
     setShowModal(false);
@@ -106,58 +74,46 @@ const CoordinatorStudent: React.FC = () => {
     resetForm();
   };
 
-  const handleModalRegister = () => {
-    setCurrentModal("credentials");
+  const handleModalRegister = () => setCurrentModal("credentials");
+
+  const handleFinalRegistration = async () => {
+    try {
+      const newStudent = {
+        coordinator_id: coordinatorId,
+        student_name: name,
+        student_address: address,
+        student_contact: contact,
+        student_sex: sex,
+        company_id: company,
+        student_status: status,
+        student_email: email,
+        student_schoolid: studentId,
+        student_password: password,
+      };
+
+      await axios.post("http://localhost:5000/api/add-student", newStudent);
+      setShowModal(false);
+      setCurrentModal(null);
+      resetForm();
+
+      const updatedStudents = await axios.get("http://localhost:5000/api/studentsni", { params: { coordinator_id: coordinatorId } });
+      setStudentData(updatedStudents.data);
+    } catch (error) {
+      console.error("Error registering student:", error);
+    }
   };
 
-  const handleFinalRegistration = () => {
-    console.log("Student registered:", {
-      name,
-      address,
-      contact,
-      sex,
-      studentId,
-      program,
-      schoolYear,
-      company,
-      status,
-      email,
-      password,
-    });
-    setShowModal(false);
-    setCurrentModal(null);
-    resetForm();
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: string
-  ) => {
+  const handleInputChange = (e, field) => {
     const value = e.target.value;
     switch (field) {
-      case "name":
-        setName(value);
-        break;
-      case "address":
-        setAddress(value);
-        break;
-      case "contact":
-        setContact(value);
-        break;
-      case "sex":
-        setSex(value);
-        break;
-      case "studentId":
-        setStudentId(value);
-        break;
-      case "email":
-        setEmail(value);
-        break;
-      case "password":
-        setPassword(value);
-        break;
-      default:
-        break;
+      case "name": setName(value); break;
+      case "address": setAddress(value); break;
+      case "contact": setContact(value); break;
+      case "sex": setSex(value); break;
+      case "studentId": setStudentId(value); break;
+      case "email": setEmail(value); break;
+      case "password": setPassword(value); break;
+      default: break;
     }
   };
 
@@ -167,53 +123,39 @@ const CoordinatorStudent: React.FC = () => {
     setContact("");
     setSex("");
     setStudentId("");
-    setProgram("");
-    setSchoolYear("");
     setCompany("");
-    setStatus("");
+    setStatus("Active");
     setEmail("");
     setPassword("");
   };
 
-  const columns = [
-    { header: "#", key: "id" },
-    { header: "Student ID", key: "studentId" },
+ const columns = [
+    { header: "#", key: "student_id" },
+    { header: "Student ID", key: "student_schoolid" },
     {
       header: "Student Info",
       key: "studentInfo",
-      render: (row: any) => (
+      render: (row) => (
         <div className="student-info">
-          <p>
-            <strong>Name:</strong> {row.studentInfo.name || "N/A"}
-          </p>
-          <p>
-            <strong>Address:</strong> {row.studentInfo.address || "N/A"}
-          </p>
-          <p>
-            <strong>Contact #:</strong> {row.studentInfo.contactNo || "N/A"}
-          </p>
-          <p>
-            <strong>Sex:</strong> {row.studentInfo.sex || "N/A"}
-          </p>
+          <p><strong>Name:</strong> {row.student_name || "N/A"}</p>
+          <p><strong>Address:</strong> {row.student_address || "N/A"}</p>
+          <p><strong>Contact #:</strong> {row.student_contact || "N/A"}</p>
+          <p><strong>Sex:</strong> {row.student_sex || "N/A"}</p>
         </div>
       ),
     },
-    {
-      header: "Status",
-      key: "status",
-    },
-    { header: "Company", key: "company" },
-    { header: "Program", key: "program" },
-    { header: "S.Y.", key: "schoolYear" },
+    { header: "Company", key: "company_name" },
+    { header: "Mentor", key: "company_mentor" },
+    { header: "Status", key: "student_status" },
     {
       header: "Action",
       key: "action",
-      render: (row: any) => (
+      render: (row) => (
         <div className="action-icons">
           <FontAwesomeIcon
             icon={faEdit}
             className="edit-icon"
-            onClick={() => handleEdit(row.id)}
+            onClick={() => console.log("Edit student record with ID:", row.student_id)}
           />
         </div>
       ),
@@ -221,12 +163,11 @@ const CoordinatorStudent: React.FC = () => {
   ];
 
 
-
   return (
     <div className="dashboard-page">
       <h1 className="page-title">Student</h1>
       <h2 className="page-subtitle">Manage Student Attendance</h2>
-
+  
       <div className="controls-container">
         <div className="search-bar-container">
           <SearchBar
@@ -242,16 +183,18 @@ const CoordinatorStudent: React.FC = () => {
           />
         </div>
       </div>
-
+  
       <DataTable columns={columns} data={studentData} />
-
+  
+      {/* Modals */}
+      {/* Registration Modal */}
       <Modal
         show={showModal && currentModal !== "credentials"}
         title=""
         message=""
         onCancel={handleModalCancel}
         onConfirm={handleModalRegister}
-        size="extralarge"
+        size="large"
         cancelButtonText="Cancel"
         confirmButtonText="Next"
       >
@@ -272,7 +215,7 @@ const CoordinatorStudent: React.FC = () => {
                 value={name}
                 onChange={(e) => handleInputChange(e, "name")}
               />
-
+  
               {/* Address Field */}
               <label htmlFor="address">Address</label>
               <NameInputField
@@ -281,7 +224,7 @@ const CoordinatorStudent: React.FC = () => {
                 value={address}
                 onChange={(e) => handleInputChange(e, "address")}
               />
-
+  
               {/* Contact Number Field */}
               <label htmlFor="contact">Contact#</label>
               <NameInputField
@@ -290,45 +233,30 @@ const CoordinatorStudent: React.FC = () => {
                 value={contact}
                 onChange={(e) => handleInputChange(e, "contact")}
               />
-              <div className="drop">
-                {/* Sex Dropdown */}
-                <label htmlFor="sex">Sex</label>
-                <Dropdown
-                  options={["Male", "Female", "Other"]}
-                  value={sex}
-                  onChange={(value) => setSex(value)}
-                />
-              </div>
-            </div>
 
+            </div>
+  
             {/* Right Side */}
             <div className="right">
               <div className="left-component">
                 <div className="dropdowns">
-                  {/* Program Dropdown */}
-                  <label htmlFor="program">Program</label>
-                  <Dropdown
-                    options={["BSCS", "BSIT", "BSIS"]}
-                    value={program}
-                    onChange={(value) => setProgram(value)}
-                  />
-
+              {/* Sex Dropdown */}
+              <label htmlFor="sex">Sex</label>
+              <Dropdown
+                options={["Male", "Female", "Other"]}
+                value={sex}
+                onChange={(value) => setSex(value)}
+              />
+  
                   {/* Company Dropdown */}
                   <label htmlFor="company">Company</label>
                   <Dropdown
-                    options={["Company A", "Company B", "Company C"]}
-                    value={company}
-                    onChange={(value) => setCompany(value)}
-                  />
-
-                  {/* School Year Dropdown */}
-                  <label htmlFor="schoolYear">S.Y.</label>
-                  <Dropdown
-                    options={["2023-2024", "2024-2025", "2025-2026"]}
-                    value={schoolYear}
-                    onChange={(value) => setSchoolYear(value)}
-                  />
-
+                    options={companyOptions.map((c) => c.label)}
+                    value={companyOptions.find((c) => c.value === company)?.label || ""}
+                    onChange={(selectedLabel) =>
+                      setCompany(companyOptions.find((c) => c.label === selectedLabel)?.value || "")
+                    }
+                  /> 
                   {/* Status Dropdown */}
                   <label htmlFor="status">Status</label>
                   <Dropdown
@@ -342,7 +270,8 @@ const CoordinatorStudent: React.FC = () => {
           </div>
         </div>
       </Modal>
-
+  
+      {/* Credentials Modal */}
       <Modal
         show={showModal && currentModal === "credentials"}
         title=""
@@ -396,10 +325,7 @@ const CoordinatorStudent: React.FC = () => {
                     onChange={(e) => handleInputChange(e, "password")}
                   />
                   <FaLock className="icon" />
-                  <div
-                    className="password-toggle"
-                    onClick={togglePasswordVisibility}
-                  >
+                  <div className="password-toggle" onClick={togglePasswordVisibility}>
                     {showPassword ? <FaEye /> : <FaEyeSlash />}
                   </div>
                 </div>

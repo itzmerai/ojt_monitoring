@@ -2,8 +2,8 @@ import React from "react";
 import "./card.scss";
 
 interface CardProps {
-  label: string;
-  value: string | number;
+  label: string |JSX.Element;
+  value?: string | number;
   icon?: React.ReactNode;
   width?: string; // Optional width prop to customize width
   height?: string; // Optional height prop to customize height

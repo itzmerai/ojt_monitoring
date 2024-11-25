@@ -8,22 +8,36 @@ import BarChartCard from "../../../../shared/components/charts/bar-chart";
 import welcomeGif from "../../../../shared/assets/welcome.gif";
 
 const CoordinatorDashboard: React.FC = () => {
+  const [coordinatorId, setCoordinatorId] = useState<string | null>(null);
   const [totalCompanies, setTotalCompanies] = useState<number | null>(null);
+  const [coordinatorName, setCoordinatorName] = useState<string>("");
   const [totalStudents, setTotalStudents] = useState<number | null>(null);
   const [recentlyAddedStudents, setRecentlyAddedStudents] = useState<
     {
       id: number;
-      profilePicture: string;
+      schoolId: string;
       name: string;
-      registrationDate: string;
+      companyName: string;
     }[]
   >([]);
 
   useEffect(() => {
+    const storedCoordinatorId = localStorage.getItem("coordinator_id");
+    if (storedCoordinatorId) {
+      setCoordinatorId(storedCoordinatorId);
+    } else {
+      alert("Coordinator ID not found. Please log in again.");
+      window.location.href = "/login";
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!coordinatorId) return;
+
     const fetchTotalCompanies = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/count-companies"
+          `http://localhost:5000/api/count-companies?coordinator_id=${coordinatorId}`
         );
         setTotalCompanies(response.data.count);
       } catch (error) {
@@ -34,7 +48,7 @@ const CoordinatorDashboard: React.FC = () => {
     const fetchTotalStudents = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/count-students"
+          `http://localhost:5000/api/count-students?coordinator_id=${coordinatorId}`
         );
         setTotalStudents(response.data.count);
       } catch (error) {
@@ -45,9 +59,16 @@ const CoordinatorDashboard: React.FC = () => {
     const fetchRecentlyAddedStudents = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/recent-students"
+          `http://localhost:5000/api/recent-students?coordinator_id=${coordinatorId}`
         );
-        setRecentlyAddedStudents(response.data.recentStudents);
+        setRecentlyAddedStudents(
+          response.data.recentStudents.map((student: any) => ({
+            id: student.student_id,
+            schoolId: student.student_schoolid,
+            name: student.student_name,
+            companyName: student.company_name,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching recently added students:", error);
       }
@@ -56,13 +77,30 @@ const CoordinatorDashboard: React.FC = () => {
     fetchTotalCompanies();
     fetchTotalStudents();
     fetchRecentlyAddedStudents();
-  }, []);
+  }, [coordinatorId]);
+
+  useEffect(() => {
+    if (!coordinatorId) return;
+
+    const fetchCoordinatorName = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/coordinatorwc?coordinator_id=${coordinatorId}`
+        );
+        setCoordinatorName(response.data.fullName);
+      } catch (error) {
+        console.error("Error fetching coordinator name:", error);
+      }
+    };
+
+    fetchCoordinatorName();
+  }, [coordinatorId]);
 
   return (
     <div className="dashb">
       <div className="cards-wrapper">
         <div className="left-card">
-          <h2>Welcome back, Richel Cubelo!</h2>
+          <h2>Welcome back, {coordinatorName}!</h2>
           <img
             src={welcomeGif}
             alt="Person using a laptop"
@@ -72,17 +110,23 @@ const CoordinatorDashboard: React.FC = () => {
         </div>
         <div className="right-cards">
           <Card
-            label="Total Students"
-            value={totalStudents !== null ? totalStudents.toString() : ""}
-            icon={<FaGraduationCap />}
+            label={
+              <span>
+                <FaGraduationCap /> Total Students:{" "}
+                {totalStudents !== null ? totalStudents : 0}
+              </span>
+            }
             width="80%"
             height="40%"
             className="total-students"
           />
           <Card
-            label="Total Companies"
-            value={totalCompanies !== null ? totalCompanies.toString() : ""}
-            icon={<FaBuilding />}
+            label={
+              <span>
+                <FaBuilding /> Total Companies:{" "}
+                {totalCompanies !== null ? totalCompanies : 0}
+              </span>
+            }
             width="80%"
             height="40%"
             className="total-companies"
@@ -91,21 +135,28 @@ const CoordinatorDashboard: React.FC = () => {
       </div>
 
       <div className="content-wrapper">
-        <div className="card-container">
-          <h2>Recently Added Students</h2>
-          <div className="new-members-list">
-            {recentlyAddedStudents.slice(0, 5).map((student) => (
-              <NewCoordinatorCard
-                key={student.id}
-                profilePicture={student.profilePicture}
-                name={student.name}
-                registrationDate={student.registrationDate}
-              />
+    <div className="recently-added-section">
+      <h2>Recently Added Students</h2>
+      <div className="table-container">
+        <table className="students-table">
+          <thead>
+            <tr>
+              <th>School ID</th>
+              <th>Student Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentlyAddedStudents.map((student) => (
+              <tr key={student.id}>
+                <td>{student.schoolId}</td>
+                <td>{student.name}</td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-        {/* Keep BarChartCard within a styled container */}
         <div className="chart-container">
           <h2>Student Company Distribution</h2>
           <BarChartCard />

@@ -23,9 +23,7 @@ const Overview: React.FC = () => {
   const [recentlyAddedCoordinators, setRecentlyAddedCoordinators] = useState<
     {
       id: number;
-      profilePicture: string;
       name: string;
-      registrationDate: string;
     }[]
   >([]);
   const [attendancePercentage, setAttendancePercentage] = useState<number>(0);
@@ -33,19 +31,19 @@ const Overview: React.FC = () => {
   useEffect(() => {
     const fetchTotalCoordinators = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3001/count-coordinators"
-        );
-        setTotalCoordinators(response.data.count);
+        const response = await axios.get("http://localhost:5000/api/count-coordinators");
+        setTotalCoordinators(response.data.count);  // Set the count of coordinators
       } catch (error) {
         console.error("Error fetching total coordinators:", error);
       }
     };
+    
+    
 
     const fetchTotalStudents = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/count-students"
+          "http://localhost:5000/countall-students"
         );
         setTotalStudents(response.data.count);
       } catch (error) {
@@ -55,19 +53,18 @@ const Overview: React.FC = () => {
 
     const fetchTotalPrograms = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3001/count-programs"
-        );
-        setTotalPrograms(response.data.count);
+        const response = await axios.get("http://localhost:5000/api/count-programs"); // Adjust the port to match your backend port
+        setTotalPrograms(response.data.count); // Set the count in your state
       } catch (error) {
         console.error("Error fetching total programs:", error);
       }
     };
+    
 
     const fetchTotalCompanies = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/count-companies"
+          "http://localhost:5000/countall-companies"
         );
         setTotalCompanies(response.data.count);
       } catch (error) {
@@ -78,7 +75,7 @@ const Overview: React.FC = () => {
     const fetchRecentlyAddedCoordinators = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3001/recent-coordinators"
+          "http://localhost:5000/api/recent-coordinators"
         );
         setRecentlyAddedCoordinators(response.data.recentCoordinators);
       } catch (error) {
@@ -117,12 +114,13 @@ const Overview: React.FC = () => {
             icon={<FaUsers />}
             className="total-coordinator"
           />
-          <Card
+            <Card
             label="Total Programs"
             value={totalPrograms !== null ? totalPrograms.toString() : "0"}
             icon={<FaBriefcase />}
             className="total-program"
           />
+
         </div>
 
         <div className="card-column">
@@ -168,7 +166,7 @@ const Overview: React.FC = () => {
             {recentlyAddedCoordinators.slice(0, 5).map((coordinator) => (
               <NewCoordinatorCard
                 key={coordinator.id}
-                profilePicture={coordinator.profilePicture}
+                //profilePicture={coordinator.profilePicture}
                 name={coordinator.name}
                 registrationDate={coordinator.registrationDate}
               />

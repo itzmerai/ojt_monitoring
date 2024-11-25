@@ -1,11 +1,10 @@
 // RecentCoordinators.tsx
 import React from "react";
 import "./recentcoordinator.scss";
-import NewCoordinatorCard from "../../new-coordinator/new-coordinator";
+import NewCoordinatorCard from "../../new-coordinator/new-coordinator"; // Check this import path
 
 interface Coordinator {
   id: number;
-  profilePicture: string;
   name: string;
   registrationDate: string;
 }
@@ -24,7 +23,6 @@ const RecentCoordinators: React.FC<RecentCoordinatorsProps> = ({
         {coordinators.slice(0, 5).map((coordinator) => (
           <NewCoordinatorCard
             key={coordinator.id}
-            profilePicture={coordinator.profilePicture}
             name={coordinator.name}
             registrationDate={coordinator.registrationDate}
           />

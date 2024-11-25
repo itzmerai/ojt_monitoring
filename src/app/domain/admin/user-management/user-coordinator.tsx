@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./user-coordinator.scss";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import SearchBar from "../../../../shared/components/searchbar/searchbar"; // Adjust the path as needed
@@ -7,70 +7,97 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import PrimaryButton from "../../../../shared/components/buttons/primero-button";
 import DataTable from "../../../../shared/components/table/data-table";
 import Modal from "../../../../shared/components/modals/modal";
-import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaEdit } from "react-icons/fa";
 import NameInputField from "../../../../shared/components/fields/unif";
-import { FaEdit } from "react-icons/fa"; // Add this import
-import PhotoUploadButton from "../../../../shared/components/photo-upload/image-upload";
+import Dropdown from "../../../../shared/components/dropdowns/dropdown";
 import axios from "axios";
-import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 
 const Coordinator: React.FC = () => {
-  const [showModal, setShowModal] = useState<boolean>(false); // Modal visibility state
-  const [currentModal, setCurrentModal] = useState<string>("details"); // Track which modal step is active
+  const [programOptions, setProgramOptions] = useState([]);
+  const [showModal, setShowModal] = useState<boolean>(false); 
+  const [currentModal, setCurrentModal] = useState<string>("details");
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [contact, setContact] = useState<string>("");
+  const [program, setProgram] = useState("");
   const [email, setEmail] = useState<string>("");
-  const [photoUrl, setPhotoUrl] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>(""); // Correctly define the state for error messages
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [coordinators, setCoordinators] = useState<any[]>([]); 
+
+  // Fetch coordinator data from the database
+  useEffect(() => {
+    const fetchCoordinators = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/coordinators");
+        setCoordinators(response.data); // Update state with the fetched data
+      } catch (error) {
+        console.error("Error fetching coordinators:", error);
+      }
+    };
+    fetchCoordinators();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [programsRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/programname"),
+        ]);
+        setProgramOptions(programsRes.data.map((p) => ({ value: p.program_id, label: p.program_name })));
+
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const openModal = () => {
-    setShowModal(true); // Show modal
+    setShowModal(true);
   };
 
   const closeModal = () => {
-    setShowModal(false); // Close modal
-    resetForm(); // Reset the form when the modal is closed
+    setShowModal(false);
+    resetForm();
   };
 
   const handleAddButtonClick = () => {
-    openModal(); // Open the modal when "Add Coordinator" button is clicked
-    setCurrentModal("details"); // Start with the details modal
+    openModal();
+    setCurrentModal("details");
   };
 
   const handleModalCancel = () => {
     if (currentModal === "confirmation") {
-      // If we are in the confirmation modal, go back to credentials
       setCurrentModal("credentials");
     } else if (currentModal === "credentials") {
-      // If we are in the credentials modal, go back to details
       setCurrentModal("details");
     } else {
-      // If we are in the details modal, just close the modal
       closeModal();
     }
   };
 
+  // Handle return to "details" modal step
   const handleReturnToRegister = () => {
-    setCurrentModal("details"); // Return to the details modal
+    setCurrentModal("details"); // Go back to the first step of the modal
   };
 
   const handleModalSave = () => {
     if (currentModal === "details") {
       if (!firstName || !lastName || !contact) {
         setErrorMessage("Please fill in all required coordinator details.");
-        setIsErrorModalOpen(true); // Show error modal if validation fails
+        setIsErrorModalOpen(true);
         return;
       }
       setCurrentModal("credentials");
     } else if (currentModal === "credentials") {
       if (!email || !username || !password) {
         setErrorMessage("Please fill in all required credentials.");
-        setIsErrorModalOpen(true); // Show error modal if validation fails
+        setIsErrorModalOpen(true);
         return;
       }
       setCurrentModal("confirmation");
@@ -105,112 +132,77 @@ const Coordinator: React.FC = () => {
         break;
     }
   };
+  
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
-
-  const handlePhotoUpload = async (file: File) => {
-    const photoURL = URL.createObjectURL(file);
-    setPhotoUrl(photoURL);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await axios.post(
-        "http://localhost:3001/upload-photo",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      setPhotoUrl(response.data.filename); // Update with actual backend response
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    }
   };
 
   const resetForm = () => {
     setFirstName("");
     setLastName("");
     setContact("");
+    setProgram("");
     setEmail("");
     setUsername("");
     setPassword("");
   };
 
-  // Updated columns for the DataTable
-  const columns = [
-    { header: "ID", key: "id" },
-    { header: "First Name", key: "firstName" },
-    { header: "Last Name", key: "lastName" },
-    { header: "Contact Number", key: "contact" }, // Updated header for clarity
-    { header: "Email", key: "email" }, // Replaced Status with Email
-    {
-      header: "Action",
-      key: "action",
-      render: (row: any) => (
-        <button onClick={() => handleEdit(row.id)} className="edit-button">
-          <FaEdit />
-        </button>
-      ),
-    },
-  ];
-
-  const handleEdit = (id: number) => {
-    console.log(`Edit coordinator with id: ${id}`);
-    // Implement edit logic here
-  };
-
   const handleConfirmSave = async () => {
-    if (!firstName || !lastName || !email || !username || !password) {
-      setErrorMessage("Please complete all fields before confirming.");
+    // Validate that all fields are filled
+    if (!firstName || !lastName || !email || !username || !password || !contact) {
+      setErrorMessage("All fields are required.");
       setIsErrorModalOpen(true);
       return;
     }
+  
+    // Log the payload before sending
+    const newCoordinator = {
+      admin_id: localStorage.getItem("admin_id"), // make sure this exists
+      coordinator_firstname: firstName,
+      coordinator_lastname: lastName,
+      coordinator_contact: contact,
+      program_id: program,
+      coordinator_email: email,
+      coordinator_user: username,
+      coordinator_pass: password,
+    };
+  
+    console.log("Submitting coordinator:", newCoordinator);
+  
     try {
+      const token = localStorage.getItem("token");
+  
+      // Make the POST request
+      const response = await axios.post(
+        "http://localhost:5000/api/add-coordinator",
+        newCoordinator,
+        {
+          headers: {
+            Authorization: token, // Ensure the token is valid
+          },
+        }
+      );
+  
+      // On success
       setShowModal(false);
       resetForm();
       setCurrentModal("details");
-    } catch (error) {
-      console.error("Error saving coordinator:", error);
+  
+      // Fetch updated coordinator list
+      const fetchResponse = await axios.get("http://localhost:5000/api/coordinators");
+      setCoordinators(fetchResponse.data);
+  
+    } catch (error: any) {
+      console.error("Error saving coordinator:", error.response ? error.response.data : error.message);
+      setErrorMessage(error.response?.data?.message || "Failed to save coordinator. Please try again.");
+      setIsErrorModalOpen(true);
     }
   };
-
-  // Sample data for the DataTable
-  const data = [
-    {
-      id: 1,
-      firstName: "John",
-      lastName: "Doe",
-      contact: "09837483721",
-      email: "john.doe@example.com",
-    },
-    {
-      id: 2,
-      firstName: "Jane",
-      lastName: "Smith",
-      contact: "09876543210",
-      email: "jane.smith@example.com",
-    },
-    {
-      id: 3,
-      firstName: "Alice",
-      lastName: "Johnson",
-      contact: "1234567890",
-      email: "alice.johnson@example.com",
-    },
-    {
-      id: 4,
-      firstName: "Bob",
-      lastName: "Brown",
-      contact: "09812345678",
-      email: "bob.brown@example.com",
-    },
-  ];
+  
+  const handleEdit = (id: number) => {
+    console.log(`Edit coordinator with id: ${id}`);
+  };
 
   return (
     <div className="dashboard-page">
@@ -234,9 +226,31 @@ const Coordinator: React.FC = () => {
         </div>
       </div>
 
-      <DataTable columns={columns} data={data} />
+      <DataTable 
+  columns={[
+    { header: "ID", key: "coordinator_id" },
+    { header: "First Name", key: "coordinator_firstname" },
+    { header: "Last Name", key: "coordinator_lastname" },
+    { header: "Contact Number", key: "coordinator_contact" },
+    { header: "Program", key: "program_name" },
+    { header: "Email", key: "coordinator_email" },
+    { header: "Username", key: "coordinator_user" },
+    { header: "Password", key: "coordinator_pass" },
+    
+    {
+      header: "Action",
+      key: "action",
+      render: (row) => (
+        <button onClick={() => handleEdit(row.id)} className="edit-button">
+          <FaEdit />
+        </button>
+      ),
+    }
+  ]}
+  data={coordinators} 
+/>
 
-      {/* Step 1: Add Coordinator Details Modal */}
+
       <Modal
         show={showModal && currentModal === "details"}
         title=""
@@ -271,6 +285,7 @@ const Coordinator: React.FC = () => {
                 onChange={(e) => handleInputChange(e, "lastName")}
               />
             </div>
+
             <div className="modal-body-right">
               <div className="left-components">
                 <label htmlFor="contact">Contact</label>
@@ -281,12 +296,19 @@ const Coordinator: React.FC = () => {
                   className="contactnum"
                   onChange={(e) => handleInputChange(e, "contact")}
                 />
-                <PhotoUploadButton
-                  onPhotoUpload={handlePhotoUpload}
-                  imgDirectory={photoUrl}
-                />
               </div>
+              <div className="dropdowns">
+            <label htmlFor="program">Program</label>
+                  <Dropdown
+                    options={programOptions.map((p) => p.label)}
+                    value={programOptions.find((p) => p.value === program)?.label || ""}
+                    onChange={(selectedLabel) =>
+                      setProgram(programOptions.find((p) => p.label === selectedLabel)?.value || "")
+                    }
+                  />
             </div>
+            </div>
+
           </div>
         </div>
       </Modal>
@@ -356,32 +378,33 @@ const Coordinator: React.FC = () => {
       </Modal>
 
       <Modal
-        show={currentModal === "confirmation"}
-        title="Confirmation"
-        message=""
-        onCancel={handleModalCancel}
-        onConfirm={handleConfirmSave}
-        size="smallmed"
-        cancelButtonText="Cancel"
-        confirmButtonText="Confirm"
-      >
-        <div className="modal-custom-content">
-          <div className="modal-custom-header">
-            <div className="header-left">
-              <h2 className="main-header">Add New Coordinator</h2>
-              <h3 className="sub-header">
-                Are you sure you want to add this coordinator?
-              </h3>
-            </div>
-          </div>
-          <div className="modal-custom-body">
-            <p>The username and password will be sent through this email:</p>
-            <strong>example@gmail.com</strong>
-          </div>
-        </div>
-      </Modal>
+  show={currentModal === "confirmation"}
+  title="Confirmation"
+  message=""
+  onCancel={handleModalCancel}
+  onConfirm={handleConfirmSave}  // Here we ensure this triggers saving
+  size="smallmed"
+  cancelButtonText="Cancel"
+  confirmButtonText="Confirm"
+>
+  <div className="modal-custom-content">
+    <div className="modal-custom-header">
+      <div className="header-left">
+        <h2 className="main-header">Add New Coordinator</h2>
+        <h3 className="sub-header">
+          Are you sure you want to add this coordinator?
+        </h3>
+      </div>
+    </div>
+    <div className="modal-custom-body">
+      <p>The username and password will be sent through this email:</p>
+      <strong>{email}</strong>
+    </div>
+  </div>
+</Modal>
 
-      <Modal
+
+     {/*<Modal
         show={isErrorModalOpen}
         title="Error"
         message={errorMessage}
@@ -405,7 +428,7 @@ const Coordinator: React.FC = () => {
             </div>
           </div>
         </div>
-      </Modal>
+      </Modal>*/}
     </div>
   );
 };

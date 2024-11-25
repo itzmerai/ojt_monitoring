@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./admin-program.scss";
 import SearchBar from "../../../../shared/components/searchbar/searchbar";
 import PrimaryButton from "../../../../shared/components/buttons/primero-button";
@@ -8,40 +8,107 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Modal from "../../../../shared/components/modals/modal";
 import NameInputField from "../../../../shared/components/fields/unif";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 const Program: React.FC = () => {
-  const [programs, setPrograms] = useState([
-    {
-      id: 1,
-      program: "BSCS",
-      description: "Bachelor of Science in Computer Science",
-      requiredDuration: "320 hrs",
-    },
-    {
-      id: 2,
-      program: "BS Information Technology",
-      description: "Bachelor of Science in Information Technology",
-      requiredDuration: "350 hrs",
-    },
-    {
-      id: 3,
-      program: "BEEd",
-      description: "Bachelor of Elementary Education",
-      requiredDuration: "40 days",
-    },
-  ]);
-
+  const [programs, setPrograms] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [showYModal, setShowYModal] = useState(false);
   const [program, setProgram] = useState("");
+  const [schoolyear, setSchoolyear] = useState("");
   const [description, setDescription] = useState("");
   const [requiredDuration, setRequiredDuration] = useState("");
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
-  const [currentModal, setCurrentModal] = useState<string>("details");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
+  useEffect(() => {
+    // Fetch existing programs from the server
+    const fetchPrograms = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/programs");
+        setPrograms(response.data);
+      } catch (error) {
+        console.error("Error fetching programs:", error);
+      }
+    };
+    fetchPrograms();
+  }, []);
+
+  // Open Add Program Modal
   const handleAddButtonClick = () => {
     setShowModal(true);
   };
 
+  // Open Add School Year Modal
+  const handleAddYearButtonClick = () => {
+    setShowYModal(true);
+  };
+
+  // Save school year
+  const handleYearModalSave = async () => {
+    const adminId = localStorage.getItem("admin_id");
+  
+    if (!schoolyear) {
+      setErrorMessage("School year is required.");
+      setIsErrorModalOpen(true);
+      return;
+    }
+  
+    const newSchoolYear = {
+      admin_id: adminId,
+      school_yr: schoolyear,
+    };
+  
+    try {
+      const response = await axios.post("http://localhost:5000/api/add-schoolyear", newSchoolYear);
+      setSchoolyear("");
+      setShowYModal(false); // Close modal after saving
+    } catch (error: any) {
+      console.error("Error saving school year:", error.response?.data || error.message);
+      setErrorMessage("Failed to save school year. Please try again.");
+      setIsErrorModalOpen(true);
+    }
+  };
+
+  // Save program
+  const handleModalSave = async () => {
+    if (!program || !description || !requiredDuration) {
+      setErrorMessage("Please fill in all required fields.");
+      setIsErrorModalOpen(true);
+    } else {
+      confirmAddProgram();
+    }
+  };
+
+  const confirmAddProgram = async () => {
+    const adminId = localStorage.getItem("admin_id");
+    if (!adminId) {
+      setErrorMessage("Admin ID not found.");
+      setIsErrorModalOpen(true);
+      return;
+    }
+
+    const newProgram = {
+      admin_id: adminId,
+      program_name: program,
+      program_description: description,
+      program_hours: requiredDuration,
+    };
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/add-program", newProgram);
+
+      // Add new program to the state and close modal
+      setPrograms([...programs, response.data]);
+      setShowModal(false); // Close modal after saving
+    } catch (error: any) {
+      console.error("Error saving program:", error.response?.data || error.message);
+      setErrorMessage("Failed to save program. Please try again.");
+      setIsErrorModalOpen(true);
+    }
+  };
+
+  // Handle input changes for both program and school year modals
   const handleInputChange = (
     e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
     field: string
@@ -52,48 +119,30 @@ const Program: React.FC = () => {
       setDescription(e.target.value);
     } else if (field === "requiredDuration") {
       setRequiredDuration(e.target.value);
+    } else if (field === "schoolyear") {
+      setSchoolyear(e.target.value);
     }
   };
 
+  // Close modals and reset state
   const handleModalCancel = () => {
     setShowModal(false);
+    setShowYModal(false);
     setProgram("");
     setDescription("");
     setRequiredDuration("");
-  };
-
-  const handleModalSave = () => {
-    if (!program || !description || !requiredDuration) {
-      setIsErrorModalOpen(true);
-    } else {
-      setCurrentModal("confirmation");
-      setShowModal(false);
-    }
-  };
-
-  const confirmAddProgram = () => {
-    const newProgram = {
-      id: programs.length + 1,
-      program,
-      description,
-      requiredDuration,
-    };
-
-    setPrograms([...programs, newProgram]);
-
-    setCurrentModal("details");
-    handleModalCancel();
+    setSchoolyear("");
   };
 
   const columns = [
-    { header: "ID", key: "id" },
-    { header: "Program", key: "program" },
-    { header: "Description", key: "description" },
-    { header: "Required Duration", key: "requiredDuration" },
+    { header: "ID", key: "program_id" },
+    { header: "Program", key: "program_name" },
+    { header: "Description", key: "program_description" },
+    { header: "Required Duration", key: "program_hours" },
     {
       header: "Action",
       key: "action",
-      render: () => (
+      render: (row: any) => (
         <div className="action-icons">
           <FontAwesomeIcon icon={faEdit} className="edit-icon" />
         </div>
@@ -116,6 +165,11 @@ const Program: React.FC = () => {
 
         <div className="add-button-container">
           <PrimaryButton
+            buttonText="Add School Year"
+            handleButtonClick={handleAddYearButtonClick}
+            icon={<FontAwesomeIcon icon={faPlus} />}
+          />
+          <PrimaryButton
             buttonText="Add Program"
             handleButtonClick={handleAddButtonClick}
             icon={<FontAwesomeIcon icon={faPlus} />}
@@ -125,10 +179,11 @@ const Program: React.FC = () => {
 
       <DataTable columns={columns} data={programs} />
 
+      {/* Add Program Modal */}
       <Modal
         show={showModal}
         message="Please fill in the details below:"
-        title=""
+        title="Register New Program"
         onCancel={handleModalCancel}
         onConfirm={handleModalSave}
         cancelButtonText="Cancel"
@@ -171,32 +226,41 @@ const Program: React.FC = () => {
         </div>
       </Modal>
 
+      {/* Add School Year Modal */}
       <Modal
-        show={currentModal === "confirmation"}
-        title="Confirmation"
-        message=""
+        show={showYModal}
+        message="Please fill in the details below:"
+        title="Register School Year"
         onCancel={handleModalCancel}
-        onConfirm={confirmAddProgram}
-        size="small"
+        onConfirm={handleYearModalSave}
         cancelButtonText="Cancel"
-        confirmButtonText="Confirm"
+        confirmButtonText="Add"
       >
-        <div className="modal-custom-content">
-          <div className="modal-custom-header">
-            <div className="header-left">
-              <h2 className="main-header">Add New Program</h2>
-              <h3 className="sub-header">
-                Are you sure you want to add this program?
-              </h3>
-            </div>
+        <div className="modal-custom-header-admin-program">
+          <div className="header-left">
+            <h2 className="main-header">Register School Year</h2>
+            <h3 className="sub-header">S:Y</h3>
+          </div>
+        </div>
+
+        <div className="modal-body">
+          <div className="modal-program">
+            <label htmlFor="schoolyear">Add School Year</label>
+            <NameInputField
+              type="text"
+              id="schoolyear"
+              value={schoolyear}
+              onChange={(e) => handleInputChange(e, "schoolyear")}
+            />
           </div>
         </div>
       </Modal>
 
+      {/* Error Modal */}
       <Modal
         show={isErrorModalOpen}
-        title=""
-        message="Please fill out all required fields."
+        title="Error"
+        message={errorMessage}
         onCancel={() => setIsErrorModalOpen(false)}
         size="small"
         singleButton={true}
@@ -211,9 +275,7 @@ const Program: React.FC = () => {
                 />
                 Error
               </h2>
-              <h3 className="sub-header">
-                Ensure all required fields are filled out.
-              </h3>
+              <h3 className="sub-header">{errorMessage}</h3>
             </div>
           </div>
         </div>

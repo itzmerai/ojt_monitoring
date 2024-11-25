@@ -1,3 +1,4 @@
+// CoordinatorAnnouncement.tsx
 import React, { useState, useEffect } from "react";
 import AnnouncementCard from "../../../../shared/components/cards/announcemet-card";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
@@ -22,57 +23,72 @@ const CoordinatorAnnouncement: React.FC = () => {
     content: "",
     type: "",
   });
+  const [coordinatorId, setCoordinatorId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAnnouncements();
+    const storedCoordinatorId = localStorage.getItem("coordinator_id");
+    if (storedCoordinatorId) {
+      setCoordinatorId(storedCoordinatorId);
+    } else {
+      alert("Coordinator ID not found. Please log in again.");
+      window.location.href = "/login";
+    }
   }, []);
 
-  const fetchAnnouncements = async () => {
-    const mockAnnouncements: Announcement[] = [
-      {
-        title: "Reminder",
-        content:
-          "To all students currently undergoing OJT at ABC Company, USA:\n\nPlease be informed that I will be visiting ABC Company on December 25, 2024, at 3:00 PM to check on your progress. Be prepared for the visit.",
-        datePosted: "06/06/2024",
-      },
-    ];
-    setAnnouncements(mockAnnouncements);
-  };
+  useEffect(() => {
+    if (coordinatorId) fetchAnnouncements();
+  }, [coordinatorId]);
 
-  const handleAddAnnouncementClick = () => {
-    setShowModal(true);
+  const fetchAnnouncements = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/announcementsni?coordinator_id=${coordinatorId}`);
+      const data = await response.json();
+      setAnnouncements(
+        data.map((item: any) => ({
+          title: item.announcement_type,
+          content: item.announcement_content,
+          datePosted: new Date().toLocaleDateString(),
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to fetch announcements:", error);
+    }
   };
+  
+
+  const handleAddAnnouncementClick = () => setShowModal(true);
 
   const handleModalCancel = () => {
     setShowModal(false);
     setNewAnnouncement({ title: "", content: "", type: "" });
   };
 
-  const handleModalSave = () => {
-    const datePosted = new Date().toLocaleDateString(); // Get current date
-    const newAnnouncementObject: Announcement = {
-      title: newAnnouncement.title,
-      content: newAnnouncement.content,
-      datePosted: datePosted,
+  const handleModalSave = async () => {
+    if (!coordinatorId) return;
+    const newAnnouncementData = {
+      coordinator_id: coordinatorId,
+      announcement_type: newAnnouncement.type,
+      announcement_content: newAnnouncement.content,
     };
-    setAnnouncements([...announcements, newAnnouncementObject]); // Add new announcement to state
-    setShowModal(false);
-    setNewAnnouncement({ title: "", content: "", type: "" }); // Reset fields after saving
+
+    try {
+      await fetch("http://localhost:5000/api/announcements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAnnouncementData),
+      });
+      fetchAnnouncements();
+      handleModalCancel();
+    } catch (error) {
+      console.error("Failed to add announcement:", error);
+    }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: string
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => {
     setNewAnnouncement({ ...newAnnouncement, [field]: e.target.value });
   };
 
-  const announcementTypes = [
-    "General Announcement",
-    "Reminder",
-    "Urgent Announcement",
-    "Policy Update",
-  ];
+  const announcementTypes = ["General Announcement", "Reminder", "Urgent Announcement", "Policy Update"];
 
   return (
     <div className="dashboard-page">
@@ -80,29 +96,17 @@ const CoordinatorAnnouncement: React.FC = () => {
       <h2 className="page-subtitle">Manage Announcements</h2>
       <div className="controls-container">
         <div className="search-bar-container">
-          <SearchBar
-            placeholder="Search"
-            onSearch={(query) => console.log(query)}
-          />
+          <SearchBar placeholder="Search" onSearch={(query) => console.log(query)} />
         </div>
         <div className="add-button-container">
-          <PrimaryButton
-            buttonText="Add Announcement"
-            handleButtonClick={handleAddAnnouncementClick}
-            icon={<FontAwesomeIcon icon={faPlus} />}
-          />
+          <PrimaryButton buttonText="Add Announcement" handleButtonClick={handleAddAnnouncementClick} icon={<FontAwesomeIcon icon={faPlus} />} />
         </div>
       </div>
       <div className="announcement-container">
         <div className="announcement-cards-wrapper">
           <div className="announcement-cards-container">
             {announcements.map((announcement, index) => (
-              <AnnouncementCard
-                key={index}
-                title={announcement.title}
-                content={announcement.content}
-                datePosted={announcement.datePosted}
-              />
+              <AnnouncementCard key={index} title={announcement.title} content={announcement.content} datePosted={announcement.datePosted} />
             ))}
           </div>
         </div>
@@ -121,7 +125,7 @@ const CoordinatorAnnouncement: React.FC = () => {
         <div className="modal-custom-header-admin-program">
           <div className="header-left">
             <h2 className="main-header">Create New Announcement</h2>
-            <h3 className="sub-header">Announcement Details</h3>   {" "}
+            <h3 className="sub-header">Announcement Details</h3>
           </div>
         </div>
         <div className="modalbody">
@@ -129,9 +133,7 @@ const CoordinatorAnnouncement: React.FC = () => {
             <Dropdown
               options={announcementTypes}
               value={newAnnouncement.type}
-              onChange={(value: string) =>
-                setNewAnnouncement({ ...newAnnouncement, type: value })
-              }
+              onChange={(value: string) => setNewAnnouncement({ ...newAnnouncement, type: value })}
               label="Announcement Type"
             />
             <NameInputField
